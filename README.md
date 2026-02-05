@@ -1,21 +1,28 @@
-# Vulkan Renderer
+# Vulkan Renderer (Work in Progress)
 
-A high-performance rendering engine built from scratch using **C++** and the **Vulkan API**. This project focuses on modern graphics programming techniques and clean software architecture.
+> **⚠️ Disclaimer:** This is a learning project. I am currently in the early stages of exploring the **Vulkan API** and modern graphics programming. The renderer is under active development and is not yet a complete or feature-rich engine.
 
-## 🚀 Features
-* **Vulkan Graphics API:** Direct GPU control for maximum performance.
-* **C++ Architecture:** Modern C++ standards for robust development.
-* **Window Management:** Cross-platform windowing via **GLFW**.
-* **Mathematics:** High-performance vector/matrix operations using **GLM**.
+A performance-focused rendering engine being built from the ground up using **C++** and **Vulkan**. This repository serves as a portfolio of my learning journey in low-level graphics development.
+
+## 🚀 Current Project Status
+-  Setting up the Vulkan Instance and Validation Layers.
+-  Window integration with GLFW.
+-  Basic Physical & Logical Device selection.
+-  Graphics Pipeline & Swapchain implementation (Upcoming).
+-  Drawing the first triangle.
+
+## 🛠️ Built With
+* **Vulkan API:** Learning the core concepts of modern GPU communication.
+* **C++:** Focused on writing clean and efficient systems code.
+* **GLFW:** Used for window management and input handling.
+* **GLM:** For essential mathematical operations.
 
 ---
 
-## 🛠️ Prerequisites & Dependencies
+## 🔧 Prerequisites & Setup
 
-Before building the project, ensure you have the following installed:
+*Note: Since the project is in its early stages, the build system is currently configured for Visual Studio 2022 on Windows.*
 
-1. **Vulkan SDK:** Download and install the latest version from [LunarG](https://vulkan.lunarg.com/).
-   - Ensure the `VULKAN_SDK` environment variable is set.
-2. **GLFW:** Multi-platform library for OpenGL, OpenGL ES, and Vulkan development. [Download here](https://www.glfw.org/).
-3. **GLM:** OpenGL Mathematics library for C++. [Download here](https://github.com/g-truc/glm).
-4. **Visual Studio 2022:** With "Desktop development with C++" workload installed.
+1. **Vulkan SDK:** Install the latest version from [LunarG](https://vulkan.lunarg.com/).
+2. **Libraries:** Ensure you have **GLFW** and **GLM** headers/libraries linked in your Visual Studio project properties.
+3. **Build:** Open the `.sln` file, set the target to **x64**, and compile.
