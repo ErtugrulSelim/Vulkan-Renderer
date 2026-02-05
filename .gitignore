@@ -1,0 +1,35 @@
+# Prerequisites: Visual Studio & C++
+# ==================================
+.vs/
+out/
+build/
+*.user
+*.suo
+*.db
+*.opendb
+*.VC.db
+
+# Build Artifacts
+# ==================================
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+*.exe
+*.dll
+*.lib
+*.pdb
+*.ilk
+*.exp
+*.obj
+*.pch
+
+# Vulkan Specifics
+# ==================================
+# Ignore compiled shaders (keep the .vert, .frag source files)
+*.spv
+
+# Logs and Temporary files
+# ==================================
+*.log
+*.tmp
