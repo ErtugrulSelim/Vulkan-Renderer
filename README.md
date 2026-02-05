@@ -2,7 +2,7 @@
 
 > **⚠️ Disclaimer:** This is a learning project. I am currently in the early stages of exploring the **Vulkan API** and modern graphics programming. The renderer is under active development and is not yet a complete or feature-rich engine.
 
-A performance-focused rendering engine being built from the ground up using **C++** and **Vulkan**. This repository serves as a portfolio of my learning journey in low-level graphics development.
+A performance-focused rendering engine being built from the ground up using **C++** and **Vulkan**.
 
 ## 🚀 Current Project Status
 -  Setting up the Vulkan Instance and Validation Layers.
