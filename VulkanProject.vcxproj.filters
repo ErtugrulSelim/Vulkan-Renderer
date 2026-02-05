@@ -18,76 +18,74 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="src\app.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="engine.h">
-      <Filter>Header Files</Filter>
-    </ClCompile>
-    <ClCompile Include="engine.cpp">
+    <ClCompile Include="src\engine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="queue_families.h">
-      <Filter>Header Files</Filter>
-    </ClCompile>
-    <ClCompile Include="app.cpp">
+    <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="instance.h">
+    <ClInclude Include="include\app.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="logging.h">
+    <ClInclude Include="include\commands.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="device.h">
+    <ClInclude Include="include\config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="swapchain.h">
+    <ClInclude Include="include\device.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="frame.h">
+    <ClInclude Include="include\engine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="shaders.h">
+    <ClInclude Include="include\frame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="pipeline.h">
+    <ClInclude Include="include\framebuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="framebuffer.h">
+    <ClInclude Include="include\instance.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="commands.h">
+    <ClInclude Include="include\logging.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="sync.h">
+    <ClInclude Include="include\pipeline.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="app.h">
+    <ClInclude Include="include\queue_families.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="config.h">
+    <ClInclude Include="include\shaders.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\swapchain.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\sync.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="shader.vert">
-      <Filter>shaders</Filter>
-    </Text>
-    <Text Include="shader.frag">
-      <Filter>shaders</Filter>
-    </Text>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="shader_compile.bat">
+    <None Include="shaders\fragment.spv">
       <Filter>shaders</Filter>
     </None>
-    <None Include="fragment.spv">
+    <None Include="shaders\shader.frag">
       <Filter>shaders</Filter>
     </None>
-    <None Include="vertex.spv">
+    <None Include="shaders\shader.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\shader_compile.bat">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\vertex.spv">
       <Filter>shaders</Filter>
     </None>
   </ItemGroup>

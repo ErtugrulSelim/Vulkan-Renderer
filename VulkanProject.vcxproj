@@ -103,7 +103,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\VulkanSDK\1.4.335.0\Include;$(SolutionDir)lib\glfw-3.4.bin.WIN64\include;$(SolutionDir)lib\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)shaders;$(ProjectDir)src;$(ProjectDir)include;C:\VulkanSDK\1.4.335.0\Include;$(SolutionDir)lib\glfw-3.4.bin.WIN64\include;$(SolutionDir)lib\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
@@ -114,7 +114,7 @@
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>call "$(ProjectDir)shader_compile.bat"</Command>
+      <Command>call "$(ProjectDir)shaders\shader_compile.bat"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -125,7 +125,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\VulkanSDK\1.4.335.0\Include;$(SolutionDir)lib\glfw-3.4.bin.WIN64\include;$(SolutionDir)lib\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)shaders;$(ProjectDir)src;$(ProjectDir)include;C:\VulkanSDK\1.4.335.0\Include;$(SolutionDir)lib\glfw-3.4.bin.WIN64\include;$(SolutionDir)lib\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
@@ -136,38 +136,36 @@
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>call "$(ProjectDir)shader_compile.bat"</Command>
+      <Command>call "$(ProjectDir)shaders\shader_compile.bat"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="app.cpp" />
-    <ClCompile Include="engine.cpp" />
-    <ClCompile Include="engine.h" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="queue_families.h" />
+    <ClCompile Include="src\app.cpp" />
+    <ClCompile Include="src\engine.cpp" />
+    <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="app.h" />
-    <ClInclude Include="commands.h" />
-    <ClInclude Include="config.h" />
-    <ClInclude Include="device.h" />
-    <ClInclude Include="frame.h" />
-    <ClInclude Include="framebuffer.h" />
-    <ClInclude Include="instance.h" />
-    <ClInclude Include="logging.h" />
-    <ClInclude Include="pipeline.h" />
-    <ClInclude Include="shaders.h" />
-    <ClInclude Include="swapchain.h" />
-    <ClInclude Include="sync.h" />
+    <ClInclude Include="include\app.h" />
+    <ClInclude Include="include\commands.h" />
+    <ClInclude Include="include\config.h" />
+    <ClInclude Include="include\device.h" />
+    <ClInclude Include="include\engine.h" />
+    <ClInclude Include="include\frame.h" />
+    <ClInclude Include="include\framebuffer.h" />
+    <ClInclude Include="include\instance.h" />
+    <ClInclude Include="include\logging.h" />
+    <ClInclude Include="include\pipeline.h" />
+    <ClInclude Include="include\queue_families.h" />
+    <ClInclude Include="include\shaders.h" />
+    <ClInclude Include="include\swapchain.h" />
+    <ClInclude Include="include\sync.h" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="shader.frag" />
-    <Text Include="shader.vert" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="fragment.spv" />
-    <None Include="shader_compile.bat" />
-    <None Include="vertex.spv" />
+    <None Include="shaders\fragment.spv" />
+    <None Include="shaders\shader.frag" />
+    <None Include="shaders\shader.vert" />
+    <None Include="shaders\shader_compile.bat" />
+    <None Include="shaders\vertex.spv" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
