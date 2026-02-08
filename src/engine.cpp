@@ -95,14 +95,19 @@ void Engine::finalize_setup() {
 	vkInit::make_framebuffers(framebufferInput, swapchainFrames, debugMode);
 
 	commandPool = vkInit::make_command_pool(device, physicalDevice, surface, debugMode);
+	frameData.resize(maxFramesInFlight);
 
 	vkInit::commandBufferInputChunk commandBufferInput = { device, commandPool, frameData };
 	std::vector<vk::CommandBuffer> mainCommandBuffer = vkInit::make_command_buffers(commandBufferInput,2, debugMode);
 
-	for(vkUtil::FrameData& frame : frameData) {
-		frame.inFlight = vkInit::make_fence(device, debugMode);
-		frame.imageAvailable = vkInit::make_semaphore(device, debugMode);
-		frame.renderFinished = vkInit::make_semaphore(device, debugMode);
+	for (int i = 0; i < maxFramesInFlight; i++) {
+		// Command Buffer'ý listeye ata
+		frameData[i].commandBuffer = mainCommandBuffer[i];
+
+		// Sync objelerini oluþtur
+		frameData[i].inFlight = vkInit::make_fence(device, debugMode);
+		frameData[i].imageAvailable = vkInit::make_semaphore(device, debugMode);
+		frameData[i].renderFinished = vkInit::make_semaphore(device, debugMode);
 	}
 
 
@@ -110,7 +115,7 @@ void Engine::finalize_setup() {
 		std::cout << "Engine setup complete!\n";
 	}
 }
-void Engine::record_draw_commands(vk::CommandBuffer commandBuffer, uint32_t imageIndex) {
+void Engine::record_draw_commands(vk::CommandBuffer commandBuffer, uint32_t imageIndex, Scene* scene) {
 
 	vk::CommandBufferBeginInfo beginInfo = {};
 
@@ -138,8 +143,14 @@ void Engine::record_draw_commands(vk::CommandBuffer commandBuffer, uint32_t imag
 
 	commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
 
-	commandBuffer.draw(4, 1, 0, 0);
-	
+	for (glm::vec3 position : scene->trianglePositions) {
+
+		glm::mat4 model = glm::translate(glm::mat4(1.0f), position);
+		vkUtil::ObjectData objectData = {};
+		objectData.model = model;
+		scene->draw(commandBuffer, pipelineLayout);
+	}
+
 	commandBuffer.endRenderPass();
 
 	try {
@@ -153,19 +164,20 @@ void Engine::record_draw_commands(vk::CommandBuffer commandBuffer, uint32_t imag
 	}
 }
 
-void Engine::render() {
+void Engine::render(Scene* scene) {
 
 	device.waitForFences(1, &frameData[frameNumber].inFlight, VK_TRUE, UINT64_MAX);
-	device.resetFences(1, &frameData[frameNumber].inFlight);
 
 	//acquireNextImageKHR(vk::SwapChainKHR, timeout, semaphore_to_signal, fence)
 	uint32_t imageIndex{ device.acquireNextImageKHR(swapchain, UINT64_MAX, frameData[frameNumber].imageAvailable, nullptr).value};
+
+	device.resetFences(1, &frameData[frameNumber].inFlight);
 
 	vk::CommandBuffer commandBuffer = frameData[frameNumber].commandBuffer;
 
 	commandBuffer.reset();
 
-	record_draw_commands(commandBuffer, imageIndex);
+	record_draw_commands(commandBuffer, imageIndex, scene);
 
 	vk::SubmitInfo submitInfo = {};
 

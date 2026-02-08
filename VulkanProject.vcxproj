@@ -143,6 +143,7 @@
     <ClCompile Include="src\app.cpp" />
     <ClCompile Include="src\engine.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\scene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\app.h" />
@@ -156,6 +157,8 @@
     <ClInclude Include="include\logging.h" />
     <ClInclude Include="include\pipeline.h" />
     <ClInclude Include="include\queue_families.h" />
+    <ClInclude Include="include\render_structs.h" />
+    <ClInclude Include="include\scene.h" />
     <ClInclude Include="include\shaders.h" />
     <ClInclude Include="include\swapchain.h" />
     <ClInclude Include="include\sync.h" />
