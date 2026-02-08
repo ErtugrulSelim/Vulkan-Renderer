@@ -173,7 +173,7 @@ namespace vkInit {
 			static_cast<uint32_t>(deviceExtensions.size()), deviceExtensions.data(),
 			&deviceFeatures
 		);
-
+		 
 		try {
 			vk::Device device = physicalDevice.createDevice(deviceInfo);
 			if (debug) {

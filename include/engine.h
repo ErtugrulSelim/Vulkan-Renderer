@@ -18,7 +18,7 @@ private:
 	bool debugMode = true;
 
 	//glfw window parameters
-	int width{ 1920 };
+	int width{ 1080 };
 	int height{ 1080 };
 	GLFWwindow* window{ nullptr };
 
@@ -34,6 +34,7 @@ private:
 	vk::Queue presentQueue{ nullptr };
 	vk::SwapchainKHR swapchain{ nullptr };
 	std::vector<vkUtil::SwapChainFrame> swapchainFrames;
+	std::vector<vkUtil::FrameData> frameData;
 	vk::Format swapchainFormat;
 	vk::Extent2D swapchainExtent;
 
@@ -47,8 +48,8 @@ private:
 	vk::CommandBuffer mainCommandBuffer;
 
 	//synchronization-related variables
-	vk::Fence inFlightFence;
-	vk::Semaphore imageAvailable, renderFinished;
+	int maxFramesInFlight, frameNumber;
+
 
 	//glfw setup
 	void build_glfw_window();
@@ -64,4 +65,4 @@ private:
 	void finalize_setup();
 
 	void record_draw_commands(vk::CommandBuffer commandBuffer, uint32_t imageIndex);
-};
+};	

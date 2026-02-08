@@ -7,8 +7,8 @@ namespace vkInit {
 	struct commandBufferInputChunk {
 		vk::Device device;
 		vk::CommandPool commandPool;
-		std::vector<vkUtil::SwapChainFrame>& frames;
-	};
+		std::vector<vkUtil::FrameData>& frames;
+	}; 
 
 	vk::CommandPool make_command_pool(vk::Device device, vk::PhysicalDevice physicalDevice, vk::SurfaceKHR surface, bool debug) {
 		
@@ -16,7 +16,7 @@ namespace vkInit {
 		vkUtil::QueueFamilyIndices queueFamilyIndices = vkUtil::findQueueFamilies(physicalDevice, surface, debug); 
 
 		vk::CommandPoolCreateInfo poolInfo{};\
-			// Specify the command pool creation parameters
+		// Specify the command pool creation parameters
 		poolInfo.flags = vk::CommandPoolCreateFlags() | vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
 		// Set the queue family index for the command pool. eResetCommandBuffer flag allows command buffers to be reset individually rather than resetting the entire pool.
 		poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
@@ -31,12 +31,13 @@ namespace vkInit {
 		return nullptr;
 	}
 
-	vk::CommandBuffer make_command_buffers(commandBufferInputChunk inputChunk, bool debug) {
-
+	std::vector<vk::CommandBuffer> make_command_buffers(commandBufferInputChunk inputChunk, int count, bool debug) {
+		 
+		inputChunk.frames.resize(2);
 		vk::CommandBufferAllocateInfo allocInfo = {};
 		allocInfo.commandPool = inputChunk.commandPool;
 		allocInfo.level = vk::CommandBufferLevel::ePrimary;
-		allocInfo.commandBufferCount = 1;
+		allocInfo.commandBufferCount = (uint32_t)inputChunk.frames.size();
 
 		for (int i = 0; i < inputChunk.frames.size();  ++i) {
 			try {
@@ -54,7 +55,7 @@ namespace vkInit {
 			}
 		};
 		try {
-			vk::CommandBuffer commandBuffer = inputChunk.device.allocateCommandBuffers(allocInfo)[0];
+			std::vector<vk::CommandBuffer> commandBuffer = inputChunk.device.allocateCommandBuffers(allocInfo);
 
 			if (debug) {
 				std::cout << "Allocated main command buffer" << std::endl;
@@ -67,7 +68,7 @@ namespace vkInit {
 			if (debug) {
 				std::cout << "Failed to allocate main command buffer" << std::endl;
 			}
-			return nullptr;
+			return {};
 		}
 	}
 }

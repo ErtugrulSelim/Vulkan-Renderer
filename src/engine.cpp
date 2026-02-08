@@ -20,6 +20,7 @@ Engine::Engine(int width, int height, GLFWwindow* window, bool debug) {
 		std::cout << "Making a graphics engine\n";
 	}
 
+
 	make_instance();
 
 	make_device();
@@ -62,6 +63,9 @@ void Engine::make_device() {
 	swapchainFrames = bundle.frames;
 	swapchainFormat = bundle.format;
 	swapchainExtent = bundle.extent;
+	
+	maxFramesInFlight = 2;
+	frameNumber = 0;
 }
 
 void Engine::make_pipeline() {
@@ -92,12 +96,15 @@ void Engine::finalize_setup() {
 
 	commandPool = vkInit::make_command_pool(device, physicalDevice, surface, debugMode);
 
-	vkInit::commandBufferInputChunk commandBufferInput = { device, commandPool, swapchainFrames };
-	mainCommandBuffer = vkInit::make_command_buffers(commandBufferInput, debugMode);
+	vkInit::commandBufferInputChunk commandBufferInput = { device, commandPool, frameData };
+	std::vector<vk::CommandBuffer> mainCommandBuffer = vkInit::make_command_buffers(commandBufferInput,2, debugMode);
 
-	inFlightFence = vkInit::make_fence(device, debugMode);
-	imageAvailable = vkInit::make_semaphore(device, debugMode);
-	renderFinished = vkInit::make_semaphore(device, debugMode);
+	for(vkUtil::FrameData& frame : frameData) {
+		frame.inFlight = vkInit::make_fence(device, debugMode);
+		frame.imageAvailable = vkInit::make_semaphore(device, debugMode);
+		frame.renderFinished = vkInit::make_semaphore(device, debugMode);
+	}
+
 
 	if (debugMode) {
 		std::cout << "Engine setup complete!\n";
@@ -132,7 +139,7 @@ void Engine::record_draw_commands(vk::CommandBuffer commandBuffer, uint32_t imag
 	commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
 
 	commandBuffer.draw(4, 1, 0, 0);
-
+	
 	commandBuffer.endRenderPass();
 
 	try {
@@ -148,13 +155,13 @@ void Engine::record_draw_commands(vk::CommandBuffer commandBuffer, uint32_t imag
 
 void Engine::render() {
 
-	device.waitForFences(1, &inFlightFence, VK_TRUE, UINT64_MAX);
-	device.resetFences(1, &inFlightFence);
+	device.waitForFences(1, &frameData[frameNumber].inFlight, VK_TRUE, UINT64_MAX);
+	device.resetFences(1, &frameData[frameNumber].inFlight);
 
 	//acquireNextImageKHR(vk::SwapChainKHR, timeout, semaphore_to_signal, fence)
-	uint32_t imageIndex{ device.acquireNextImageKHR(swapchain, UINT64_MAX, imageAvailable, nullptr).value };
+	uint32_t imageIndex{ device.acquireNextImageKHR(swapchain, UINT64_MAX, frameData[frameNumber].imageAvailable, nullptr).value};
 
-	vk::CommandBuffer commandBuffer = swapchainFrames[imageIndex].commandBuffer;
+	vk::CommandBuffer commandBuffer = frameData[frameNumber].commandBuffer;
 
 	commandBuffer.reset();
 
@@ -162,7 +169,7 @@ void Engine::render() {
 
 	vk::SubmitInfo submitInfo = {};
 
-	vk::Semaphore waitSemaphores[] = { imageAvailable };
+	vk::Semaphore waitSemaphores[] = { frameData[frameNumber].imageAvailable };
 	vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
 	submitInfo.waitSemaphoreCount = 1;
 	submitInfo.pWaitSemaphores = waitSemaphores;
@@ -171,12 +178,12 @@ void Engine::render() {
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &commandBuffer;
 
-	vk::Semaphore signalSemaphores[] = { renderFinished };
+	vk::Semaphore signalSemaphores[] = { frameData[frameNumber].renderFinished };
 	submitInfo.signalSemaphoreCount = 1;
 	submitInfo.pSignalSemaphores = signalSemaphores;
 
 	try {
-		graphicsQueue.submit(submitInfo, inFlightFence);
+		graphicsQueue.submit(submitInfo, frameData[frameNumber].inFlight);
 	}
 	catch (vk::SystemError err) {
 
@@ -197,6 +204,8 @@ void Engine::render() {
 
 	presentQueue.presentKHR(presentInfo);
 
+	frameNumber = (frameNumber + 1) % maxFramesInFlight;
+
 }
 
 
@@ -209,20 +218,22 @@ Engine::~Engine() {
 		std::cout << "Goodbye see you!\n";
 	}
 	
-	device.destroyFence(inFlightFence);
-	device.destroySemaphore(imageAvailable);
-	device.destroySemaphore(renderFinished);
+	for (vkUtil::SwapChainFrame& frame : swapchainFrames) {
+		device.destroyImageView(frame.imageView);
+		device.destroyFramebuffer(frame.framebuffer);
+	}
 
+	for (vkUtil::FrameData& frame : frameData) {
+		device.destroyFence(frame.inFlight);
+		device.destroySemaphore(frame.imageAvailable);
+		device.destroySemaphore(frame.renderFinished);
+	}
 	device.destroyCommandPool(commandPool);
 
 	device.destroyPipeline(pipeline);
 	device.destroyPipelineLayout(pipelineLayout);
 	device.destroyRenderPass(renderpass);
 
-	for(vkUtil::SwapChainFrame& frame : swapchainFrames) {
-		device.destroyImageView(frame.imageView);
-		device.destroyFramebuffer(frame.framebuffer);
-	}
 	device.destroySwapchainKHR(swapchain, nullptr, dldi);
 	device.destroy();
 
