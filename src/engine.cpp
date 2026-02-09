@@ -58,14 +58,37 @@ void Engine::make_device() {
 	std::array<vk::Queue, 2> queues = vkInit::get_queues(physicalDevice, device, surface, debugMode);
 	graphicsQueue = queues[0]; 
 	presentQueue = queues[1];
+	make_swapchain();
+	frameNumber = 0;
+}
+void Engine::make_swapchain() {
 	vkInit::SwapChainBundle bundle = vkInit::create_swapchain(device, physicalDevice, surface, width, height, debugMode, dldi);
 	swapchain = bundle.swapchain;
 	swapchainFrames = bundle.frames;
 	swapchainFormat = bundle.format;
 	swapchainExtent = bundle.extent;
-	
 	maxFramesInFlight = 2;
-	frameNumber = 0;
+}
+
+void Engine::recreate_swapchain() {
+
+	width = 0;
+	height = 0;
+	while (width == 0 || height == 0) {
+		glfwGetFramebufferSize(window, &width, &height);
+		glfwWaitEvents();
+	}
+
+	device.waitIdle();
+	cleanup_swapchain();
+	make_swapchain();
+	make_framebuffers();
+	make_frame_sync_object();
+	commandPool = vkInit::make_command_pool(device, physicalDevice, surface, debugMode);
+	frameData.resize(maxFramesInFlight);
+
+	vkInit::commandBufferInputChunk commandBufferInput = { device, commandPool, frameData };
+	vkInit::make_frame_command_buffers(commandBufferInput, debugMode);
 }
 
 void Engine::make_pipeline() {
@@ -87,33 +110,39 @@ void Engine::make_pipeline() {
 
 }
 
-void Engine::finalize_setup() {
+void Engine::make_framebuffers() {
 	vkInit::framebufferInput framebufferInput;
 	framebufferInput.device = device;
 	framebufferInput.renderpass = renderpass;
 	framebufferInput.swapchainExtent = swapchainExtent;
 	vkInit::make_framebuffers(framebufferInput, swapchainFrames, debugMode);
+}
+
+void Engine::make_frame_sync_object() {
+
+	vkInit::commandBufferInputChunk commandBufferInput = { device, commandPool, frameData };
+	for (int i = 0; i < maxFramesInFlight; i++) {
+
+		std::vector<vk::CommandBuffer> mainCommandBuffers = vkInit::make_command_buffer(commandBufferInput, 2, debugMode);
+		frameData[i].commandBuffer = mainCommandBuffers[i];
+
+		frameData[i].inFlight = vkInit::make_fence(device, debugMode);
+		frameData[i].imageAvailable = vkInit::make_semaphore(device, debugMode);
+		frameData[i].renderFinished = vkInit::make_semaphore(device, debugMode);
+	}
+}
+
+void Engine::finalize_setup() {
+
+	make_framebuffers();
 
 	commandPool = vkInit::make_command_pool(device, physicalDevice, surface, debugMode);
 	frameData.resize(maxFramesInFlight);
 
 	vkInit::commandBufferInputChunk commandBufferInput = { device, commandPool, frameData };
-	std::vector<vk::CommandBuffer> mainCommandBuffer = vkInit::make_command_buffers(commandBufferInput,2, debugMode);
+	vkInit::make_frame_command_buffers(commandBufferInput,debugMode);
 
-	for (int i = 0; i < maxFramesInFlight; i++) {
-		// Command Buffer'ý listeye ata
-		frameData[i].commandBuffer = mainCommandBuffer[i];
-
-		// Sync objelerini oluþtur
-		frameData[i].inFlight = vkInit::make_fence(device, debugMode);
-		frameData[i].imageAvailable = vkInit::make_semaphore(device, debugMode);
-		frameData[i].renderFinished = vkInit::make_semaphore(device, debugMode);
-	}
-
-
-	if (debugMode) {
-		std::cout << "Engine setup complete!\n";
-	}
+	make_frame_sync_object();
 }
 void Engine::record_draw_commands(vk::CommandBuffer commandBuffer, uint32_t imageIndex, Scene* scene) {
 
@@ -143,13 +172,7 @@ void Engine::record_draw_commands(vk::CommandBuffer commandBuffer, uint32_t imag
 
 	commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
 
-	for (glm::vec3 position : scene->trianglePositions) {
-
-		glm::mat4 model = glm::translate(glm::mat4(1.0f), position);
-		vkUtil::ObjectData objectData = {};
-		objectData.model = model;
-		scene->draw(commandBuffer, pipelineLayout);
-	}
+	scene->draw(commandBuffer, pipelineLayout);
 
 	commandBuffer.endRenderPass();
 
@@ -167,11 +190,16 @@ void Engine::record_draw_commands(vk::CommandBuffer commandBuffer, uint32_t imag
 void Engine::render(Scene* scene) {
 
 	device.waitForFences(1, &frameData[frameNumber].inFlight, VK_TRUE, UINT64_MAX);
-
-	//acquireNextImageKHR(vk::SwapChainKHR, timeout, semaphore_to_signal, fence)
-	uint32_t imageIndex{ device.acquireNextImageKHR(swapchain, UINT64_MAX, frameData[frameNumber].imageAvailable, nullptr).value};
-
 	device.resetFences(1, &frameData[frameNumber].inFlight);
+	uint32_t imageIndex;
+	try {
+		vk::ResultValue acquire = device.acquireNextImageKHR(swapchain, UINT64_MAX, frameData[frameNumber].imageAvailable, nullptr);
+		imageIndex = acquire.value;
+	}
+	catch (vk::SystemError err) {
+		recreate_swapchain();
+		return;
+	}
 
 	vk::CommandBuffer commandBuffer = frameData[frameNumber].commandBuffer;
 
@@ -194,6 +222,8 @@ void Engine::render(Scene* scene) {
 	submitInfo.signalSemaphoreCount = 1;
 	submitInfo.pSignalSemaphores = signalSemaphores;
 
+	
+
 	try {
 		graphicsQueue.submit(submitInfo, frameData[frameNumber].inFlight);
 	}
@@ -214,22 +244,24 @@ void Engine::render(Scene* scene) {
 
 	presentInfo.pImageIndices = &imageIndex;
 
-	presentQueue.presentKHR(presentInfo);
+	vk::Result present;
 
-	frameNumber = (frameNumber + 1) % maxFramesInFlight;
+	try {
+		present = presentQueue.presentKHR(presentInfo);
+	}
+	catch (vk::OutOfDateKHRError error) {
+		present = vk::Result::eErrorOutOfDateKHR;
+	}
+	if (present == vk::Result::eErrorOutOfDateKHR || present == vk::Result::eSuboptimalKHR) {
+		std::cout << "Recreate" << std::endl;
+		recreate_swapchain();
+		return;
+	}
 
 }
 
+void Engine::cleanup_swapchain() {
 
-Engine::~Engine() {
-
-	device.waitIdle();
-
-
-	if (debugMode) {
-		std::cout << "Goodbye see you!\n";
-	}
-	
 	for (vkUtil::SwapChainFrame& frame : swapchainFrames) {
 		device.destroyImageView(frame.imageView);
 		device.destroyFramebuffer(frame.framebuffer);
@@ -240,13 +272,24 @@ Engine::~Engine() {
 		device.destroySemaphore(frame.imageAvailable);
 		device.destroySemaphore(frame.renderFinished);
 	}
+	device.destroySwapchainKHR(swapchain);
+}
+
+Engine::~Engine() {
+
+	device.waitIdle();
+
+	if (debugMode) {
+		std::cout << "Goodbye see you!\n";
+	}
+	
 	device.destroyCommandPool(commandPool);
 
 	device.destroyPipeline(pipeline);
 	device.destroyPipelineLayout(pipelineLayout);
 	device.destroyRenderPass(renderpass);
 
-	device.destroySwapchainKHR(swapchain, nullptr, dldi);
+	cleanup_swapchain();
 	device.destroy();
 
 	instance.destroySurfaceKHR(surface);

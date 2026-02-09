@@ -31,7 +31,7 @@ namespace vkInit {
 		return nullptr;
 	}
 
-	std::vector<vk::CommandBuffer> make_command_buffers(commandBufferInputChunk inputChunk, int count, bool debug) {
+	std::vector<vk::CommandBuffer> make_command_buffer(commandBufferInputChunk inputChunk, int count, bool debug) {
 		 
 		inputChunk.frames.resize(2);
 		vk::CommandBufferAllocateInfo allocInfo = {};
@@ -39,21 +39,7 @@ namespace vkInit {
 		allocInfo.level = vk::CommandBufferLevel::ePrimary;
 		allocInfo.commandBufferCount = (uint32_t)inputChunk.frames.size();
 
-		for (int i = 0; i < inputChunk.frames.size();  ++i) {
-			try {
-				inputChunk.frames[i].commandBuffer = inputChunk.device.allocateCommandBuffers(allocInfo)[0];
-
-				if (debug) {
-					std::cout << "Allocated command buffer for frame " << i << std::endl;
-				}
-			}
-			catch (vk::SystemError err) {
-
-				if (debug) {
-					std::cout << "Failed to allocate command buffer for frame " << i << std::endl;
-				}
-			}
-		};
+	
 		try {
 			std::vector<vk::CommandBuffer> commandBuffer = inputChunk.device.allocateCommandBuffers(allocInfo);
 
@@ -69,6 +55,30 @@ namespace vkInit {
 				std::cout << "Failed to allocate main command buffer" << std::endl;
 			}
 			return {};
+		}
+	}
+	void make_frame_command_buffers(commandBufferInputChunk inputChunk, bool debug) {
+
+		vk::CommandBufferAllocateInfo allocInfo = {};
+		allocInfo.commandPool = inputChunk.commandPool;
+		allocInfo.level = vk::CommandBufferLevel::ePrimary;
+		allocInfo.commandBufferCount = 1;
+
+		//Make a command buffer for each frame
+		for (int i = 0; i < inputChunk.frames.size(); ++i) {
+			try {
+				inputChunk.frames[i].commandBuffer = inputChunk.device.allocateCommandBuffers(allocInfo)[0];
+
+				if (debug) {
+					std::cout << "Allocated command buffer for frame " << i << std::endl;
+				}
+			}
+			catch (vk::SystemError err) {
+
+				if (debug) {
+					std::cout << "Failed to allocate command buffer for frame " << i << std::endl;
+				}
+			}
 		}
 	}
 }
